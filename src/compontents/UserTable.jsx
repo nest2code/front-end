@@ -2,19 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const UserTable = () => {
-    const [user, setUser] = useState([]);
-    const [assoc, setAssoc] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [associations, setAssociations] = useState([]);
     const [message, setMessage] = useState('');
+    const [searchKey, setSearchKey] = useState('');
 
-    const getAssoc = async () => {
+    // Fetch associations
+    const getAssociations = async () => {
         try {
-            let result = await fetch('http://localhost:5000/add-association', {
-                method: "GET"
-            });
-            result = await result.json();
-            
-            if (result.assoc) {
-                setAssoc(result.assoc);
+            let response = await fetch('http://localhost:5000/add-association');
+            let data = await response.json();
+            if (data.assoc) {
+                setAssociations(data.assoc);
             } else {
                 setMessage('Currently no associations in the database');
             }
@@ -24,17 +23,16 @@ const UserTable = () => {
     };
 
     useEffect(() => {
-        getAssoc();
+        getAssociations();
     }, []);
 
-    const getUser = async () => {
+    // Fetch users
+    const getUsers = async () => {
         try {
-            let result = await fetch('http://localhost:5000/users', {
-                method: "GET"
-            });
-            result = await result.json();
-            if (result.message === 'ok') {
-                setUser(result.users);
+            let response = await fetch('http://localhost:5000/users');
+            let data = await response.json();
+            if (data.message === 'ok') {
+                setUsers(data.users);
             } else {
                 console.log('Error fetching the data');
             }
@@ -44,15 +42,38 @@ const UserTable = () => {
     };
 
     useEffect(() => {
-        getUser();
+        getUsers();
     }, []);
-    
+
+    // Search users
+    const searchUsers = async (query) => {
+        try {
+            let response = await fetch(`http://localhost:5000/search/${query}`);
+            let data = await response.json();
+            if (data.message === 'ok') {
+                setUsers(data.users);
+            } else {
+                console.log('Error fetching search results');
+            }
+        } catch (error) {
+            console.log('Error fetching search results');
+        }
+    };
+
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchKey(query);
+        if (query) {
+            searchUsers(query);
+        } else {
+            getUsers();
+        }
+    };
 
     const determineRole = (user, association) => {
         if (!association) {
             return 'No Association';
         }
-
         if (user._id === association.chairperson) {
             return 'Chairperson';
         }
@@ -65,93 +86,106 @@ const UserTable = () => {
         return 'Member';
     };
 
-    return (
-        <div className="relative overflow-x-auto shadow-md">
-            <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                        <th scope="col" className="px-6 py-3">
-                            <div className="flex items-center">
-                                S/N
-                            </div>
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                            Name
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                            <div className="flex items-center">
-                                Phone Number
-                            </div>
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                            Email
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                            <div className="flex items-center">
-                                Association
-                            </div>
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                            <div className="flex items-center">
-                                Role
-                            </div>
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                            <div className="flex items-center">
-                                Status
-                            </div>
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                            <div className="flex items-center">
-                                Action
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {user.map((user, index) => {
-                        const association = assoc.find(a => a._id === user.association); // Assuming user has assocId field
-                        const role = determineRole(user, association);
-                      
-                        console.log("User ID:", user._id);
-                        console.log("User Association ID:", user.assocId);
-                        console.log("Association found:", association);
+    // Handle approve button click
+    const handleApproveClick = async (userId) => {
+        try {
+            const response = await fetch(`http://localhost:5000/update-user/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Failed to approve user');
+            }
+            const result = await response.json();
+            alert(result.message);
 
-                        return (
-                            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700" key={user._id}>
-                                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {index + 1}
-                                </th>
-                                <td className="px-6 py-4">
-                                    {user.first_name + " " + user.last_name}
-                                </td>
-                                <td className="px-6 py-4">
-                                    {user.phone_number}
-                                </td>
-                                <td className="px-6 py-4">
-                                    {user.username}
-                                </td>
-                                <td className="px-6 py-4">
-                                    {message ? "N/A" : (association ? association.name : "No Association")}
-                                </td>
-                                <td className="px-6 py-4">
-                                    {role}
-                                </td>
-                                <td className="px-6 py-4">
-                                    {user.status}
-                                </td>
-                                <td className="px-6 py-4 text-left">
-                                    <Link to={`/user/${user._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">Update</Link>
-                                    <Link to={`/user-view/${user._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">View</Link>
-                                    <button type="button" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Approve</button>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </div>
+            // Update user status in the UI
+            const updatedUsers = users.map(user =>
+                user._id === userId ? { ...user, status: 'Approved' } : user
+            );
+            setUsers(updatedUsers);
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    return (
+        <>
+            <div className="relative w-full max-w-md ml-auto mt-10 mb-10 mr-36">
+                <input
+                    type="text"
+                    value={searchKey}
+                    onChange={handleSearchChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Search..."
+                />
+            </div>
+
+            <div className="relative overflow-x-auto shadow-md m-5">
+                <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" className="px-6 py-3">S/N</th>
+                            <th scope="col" className="px-6 py-3">Name</th>
+                            <th scope="col" className="px-6 py-3">Phone Number</th>
+                            <th scope="col" className="px-6 py-3">Email</th>
+                            <th scope="col" className="px-6 py-3">Association</th>
+                            <th scope="col" className="px-6 py-3">Role</th>
+                            <th scope="col" className="px-6 py-3">Status</th>
+                            <th scope="col" className="px-6 py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {users.map((user, index) => {
+                            const association = associations.find(a => a._id === user.association);
+                            const role = determineRole(user, association);
+                            return (
+                                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700" key={user._id}>
+                                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                        {index + 1}
+                                    </th>
+                                    <td className="px-6 py-4">
+                                        {user.first_name + " " + user.last_name}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {user.phone_number}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {user.username}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {message ? "N/A" : (association ? association.name : "No Association")}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {role}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {user.status}
+                                    </td>
+                                    <td className="px-6 py-4 text-left">
+                                      { user.status ==="Approved" && <Link to={`/user/${user._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">Update</Link> }
+                                       { user.status ==="Approved" &&  <Link to={`/user-view/${user._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">View</Link>}
+                                        {user.status !== 'Approved' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleApproveClick(user._id)}
+                                                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                                            >
+                                                Approve
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </>
     );
-}
+};
 
 export default UserTable;
+

@@ -32,6 +32,7 @@ import LoanApplicationForm from "../pages/LoanApplication";
 import LoanDetails from "./LoanTable";
 import LoanPaymentForm from "./LoanPayment";
 import LoanPaymentDetails from "./LoanPaymentDetails";
+import ProfilePicture from "./ProfilePicture";
 export{
     ListSearch,
     UserTable,
@@ -39,6 +40,7 @@ export{
     LoanDetails,
     Withdraw,
     User,
+    ProfilePicture,
     LoanPaymentDetails,
     LoanPaymentForm,
     LoanApplicationForm,

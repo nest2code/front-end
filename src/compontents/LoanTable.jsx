@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams,Link  } from 'react-router-dom';
-
+import { useParams, Link } from 'react-router-dom';
 
 const LoanDetails = () => {
   const { userId } = useParams();
@@ -31,6 +30,33 @@ const LoanDetails = () => {
   const calculateTotalLoanBalance = (loanList) => {
     const totalBalance = loanList.reduce((acc, loan) => acc + (loan.amount * (1 + loan.interestRate / 100)), 0);
     setTotalLoanBalance(totalBalance);
+  };
+
+  // Handle loan approval
+  const approveLoan = async (loanId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/update-loan/${loanId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve loan');
+      }
+
+      const result = await response.json();
+      alert(result.message);
+
+      // Optionally, refresh the loan list to reflect the changes
+      const updatedLoans = loans.map((loan) =>
+        loan._id === loanId ? { ...loan, status: 'Approved', startDate: new Date() } : loan
+      );
+      setLoans(updatedLoans);
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -68,10 +94,18 @@ const LoanDetails = () => {
                 <td className="px-6 py-4">{(loan.amount * (1 + loan.interestRate / 100)).toFixed(2)}</td>
                 <td className="px-6 py-4">{loan.status}</td>
                 <td className="px-6 py-4 text-left">
-                                    <Link to={`/loan-payment/${userId}/${loan._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">Payment</Link>
-                                    <Link to={`/payment-view/${userId}/${loan._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">View Details</Link>
-                                    <button type="button" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Approve</button>
-                                </td>
+                  { loan.status ==="Approved" && <Link to={`/loan-payment/${userId}/${loan._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">Payment</Link>}
+                  { loan.status ==="Approved" && <Link to={`/payment-view/${userId}/${loan._id}`} className="font-medium mr-5 text-blue-600 dark:text-blue-500 hover:underline">View Details</Link>}
+                  {loan.status !== 'Approved' && (
+                    <button
+                      type="button"
+                      onClick={() => approveLoan(loan._id)}
+                      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                    >
+                      Approve
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

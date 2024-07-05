@@ -1,6 +1,6 @@
 import "./App.css";
 import { Routes, Route } from "react-router-dom";
-import { Home,Header,SignIn,AboutPage, Footer ,Register,Contact, Profile, NotFound, UserTablePage, AssociationPage, UpdateAssociation, User, UpdateUser, Save, TransactionTable, Withdraw, AddShare, ShareTable, LoanApplicationForm, LoanDetails, LoanPaymentForm, LoanPaymentDetails} from "./compontents/compontent";
+import { Home,Header,SignIn,AboutPage, Footer ,Register,Contact, Profile, NotFound, UserTablePage, AssociationPage, UpdateAssociation, User, UpdateUser, Save, TransactionTable, Withdraw, AddShare, ShareTable, LoanApplicationForm, LoanDetails, LoanPaymentForm, LoanPaymentDetails, ProfilePicture} from "./compontents/compontent";
 import TransferShare from "./compontents/TransferShare";
 
 function App() {
@@ -34,6 +34,7 @@ function App() {
           <Route path="/loan-payment/:userId/:loanId" element={<LoanPaymentForm/>} />
           <Route path="/payment-view/:userId/:loanId" element={<LoanPaymentDetails/>} />
           <Route path="/users/share-transfer/:userId" element={<TransferShare/>} />
+          <Route path="/user/profile-image" element={<ProfilePicture/>} />
         </Routes>
       </div>
       <Footer />

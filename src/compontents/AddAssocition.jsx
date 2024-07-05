@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 
 export default function AddAssociation() {
     const [name ,setName] = useState('')
     const [message,setMessage] = useState('')
-    const navigate = useNavigate('')
+  
     const handleCancel = () => {
        setName('')
     };
@@ -26,6 +26,7 @@ export default function AddAssociation() {
             if (result.message === "ok") {
               // Redirect to the profile route on successful registration
              setName('')
+             
             } else {
               // Set the message in case of an error
               setMessage(result.message || 'Failed to Add association');

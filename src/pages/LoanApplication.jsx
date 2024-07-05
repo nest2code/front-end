@@ -48,7 +48,7 @@ const LoanApplicationForm = () => {
   useEffect(() => {
     getUser();
     getAssoc();
-  }, [userId]);
+  });
 
   useEffect(() => {
     if (amount) {
